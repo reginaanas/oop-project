@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits>
+
 using namespace std;
 
 class LibraryItem {
@@ -101,5 +103,39 @@ public:
                 return lateDays * 500;
             }
         };
-        
+
+    class Library {
+    private:
+        vector<LibraryItem*> items;
+    
+    public: 
+        // Add a new item to library
+        void addItem(LibraryItem* item) {
+            item.push_back(item);
+        }
+
+        // Display all items
+        void displayItems() const {
+            if(item.empty()) {
+                cout << "No itemm available. \n";
+                return;
+            }
+            for(LibraryItem* item : items) {
+                item->displayInfo();
+            }
+        }
+
+        // Find item by ISBN
+        LibrayItem* findItem(const string& itemISBN) const {
+            for(LibraryItem* item : items) {
+                if(item->getISBN() == itemISBN) {
+                    return item;
+                }
+            }
+            return nullptr;
+        }
+
+        // Search and display an item
+        void
+    }
 }

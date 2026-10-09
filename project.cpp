@@ -43,7 +43,63 @@ public:
 
         virtual string getType() const = 0;
         virtual void displayInfo() const = 0;
-        virtual int calculateLateFee(int lateDay) const = 0;
+        virtual int calculateLateFee(int lateDays) const = 0;
 
         virtual ~LibraryItem() = default;
+
+        class Book : public LibraryItem {
+            private:
+                string author;
+            
+            public:
+                Book(string itemISBN, string itemTitle, string itemAuthor)
+                    : LibraryItem(itemISBN, itemTitle), author(itemAuthor) {}
+            
+            string getType() const override {
+                return "Book";
+            }
+
+            void displayInfo() const override {
+                cout << "Type: " << getType() << endl;
+                cout << "ISBN: " << getISBN() << endl;
+                cout << "Title: " << getTitle() << endl;
+                cout << "Author: " << author << endl;
+                cout << "Status: " << (isBorrowed() ? "Borrowed" : "Available") << endl;
+            }
+
+            void calculateLateFee(int lateDays) const override {
+                if (lateDays <= 0){
+                    return 0;
+                }
+                return lateDays * 1000;
+            }
+        };
+        class Magazine : public LibraryItem {
+            private:
+               string publicationMonth;
+            
+            public:
+                Magazine(string itemISBN, string itemTitle, string itemMonth)
+                    : LibraryItem(itemISBN, itemTitle), publicationMonth(itemMonth) {}
+            
+            string getType() const override {
+                return "Magazine";
+            }
+
+            void display() const override {
+                cout << "Type: " << getType() << endl;
+                cout << "ISBN: " << getISBN() << endl;
+                cout << "Title: " << getTitle() << endl;
+                cout << "Publication Month: " << publicationMonth << endl;
+                cout << "Status: " << (isBorrowed() ? "Borrowed" : "Available") << endl;
+            }
+            
+            int calculateLateFee(int lateDays) const override {
+                if(lateDays <= 0){
+                    return 0;
+                }
+                return lateDays * 500;
+            }
+        };
+        
 }

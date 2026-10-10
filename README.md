@@ -37,6 +37,7 @@ ShelfMate calculates late fees based on the type of library item.
 | ----------- | --------------: |
 | 📘 Book     | Rp1,000 per day |
 | 📰 Magazine |   Rp500 per day |
+
 No late fee is charged when an item is returned on or before its due date.
 
 ### 🗓️ Date Simulation
@@ -102,6 +103,7 @@ The application includes sample accounts for testing.
 | 👑 Administrator | `ADMIN001` | Admin                 |
 | 👩‍🎓 Member     | `MBR001`   | Nida Nur Hafizhah     |
 | 👩‍🎓 Member     | `MBR002`   | Regina Titian Pinasti |
+
 No password is required.
 
 ## 📚 Sample Library Items

@@ -3,7 +3,6 @@
 Welcome to **ShelfMate**! 👋
 
 ShelfMate is a simple, terminal-based Library Management System built with **C++** to demonstrate the four pillars of Object-Oriented Programming (OOP): encapsulation, abstraction, inheritance, and polymorphism.
-
 The application allows administrators to manage library items and members, while members can borrow and return books or magazines. It also calculates late return fees automatically. 💻
 
 ## ✨ Features

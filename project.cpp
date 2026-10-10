@@ -6,8 +6,80 @@
 #include <iomanip>
 #include <sstream>
 #include <cctype>
+#include <fstream>
 
 using namespace std;
+
+// =====================================================
+// HELPER FUNCTIONS FOR FILE HANDLING & ESCAPING
+// =====================================================
+
+// Mengganti delimiter '|' dengan '\|' agar aman disimpan ke file TXT
+string escapePipe(const string &str)
+{
+    string result;
+    for (char c : str)
+    {
+        if (c == '|')
+            result += "\\|";
+        else
+            result += c;
+    }
+    return result;
+}
+
+// Mengembalikan karakter '|' yang di-escape
+string unescapePipe(const string &str)
+{
+    string result;
+    for (size_t i = 0; i < str.length(); ++i)
+    {
+        if (str[i] == '\\' && i + 1 < str.length() && str[i + 1] == '|')
+        {
+            result += '|';
+            i++;
+        }
+        else
+        {
+            result += str[i];
+        }
+    }
+    return result;
+}
+
+// Memisahkan string berdasarkan delimiter '|' dengan memperhatikan escape '\'
+vector<string> splitFormattedLine(const string &line)
+{
+    vector<string> tokens;
+    string currentToken;
+    bool escaped = false;
+
+    for (size_t i = 0; i < line.length(); ++i)
+    {
+        char c = line[i];
+        if (escaped)
+        {
+            currentToken += c;
+            escaped = false;
+        }
+        else if (c == '\\')
+        {
+            currentToken += c;
+            escaped = true;
+        }
+        else if (c == '|')
+        {
+            tokens.push_back(unescapePipe(currentToken));
+            currentToken.clear();
+        }
+        else
+        {
+            currentToken += c;
+        }
+    }
+    tokens.push_back(unescapePipe(currentToken));
+    return tokens;
+}
 
 // =====================================================
 // DATE FUNCTIONS
@@ -173,10 +245,7 @@ string getDateForTransaction()
     }
 }
 
-// =====================================================
-// INPUT FUNCTIONS
-// =====================================================
-
+// Input Functions
 void printLine()
 {
     cout << "---------------------------------------------\n";
@@ -215,10 +284,7 @@ int readInteger(const string &prompt)
     }
 }
 
-// =====================================================
-// ABSTRACT BASE CLASS: LIBRARY ITEM
-// =====================================================
-
+// Base Class: Library Item
 class LibraryItem
 {
 private:
@@ -273,12 +339,11 @@ public:
     virtual void displayInfo() const = 0;
 
     virtual int calculateLateFee(int lateDays) const = 0;
+
+    virtual string serialize() const = 0;
 };
 
-// =====================================================
-// INHERITANCE: BOOK
-// =====================================================
-
+// Derived Class: Book
 class Book : public LibraryItem
 {
 private:
@@ -288,6 +353,11 @@ public:
     Book(string itemID, string title, string itemAuthor)
         : LibraryItem(itemID, title),
           author(itemAuthor) {}
+
+    string getAuthor() const
+    {
+        return author;
+    }
 
     string getType() const override
     {
@@ -309,12 +379,17 @@ public:
     {
         return lateDays > 0 ? lateDays * 1000 : 0;
     }
+
+    string serialize() const override
+    {
+        // Format: Book|ID|Title|Author|isBorrowed|borrowerID
+        return "Book|" + escapePipe(getID()) + "|" + escapePipe(getTitle()) + "|" +
+               escapePipe(author) + "|" + (isBorrowed() ? "1" : "0") + "|" +
+               escapePipe(getBorrowerID());
+    }
 };
 
-// =====================================================
-// INHERITANCE: MAGAZINE
-// =====================================================
-
+// Derived Class: Magazine
 class Magazine : public LibraryItem
 {
 private:
@@ -324,6 +399,11 @@ public:
     Magazine(string itemID, string title, string magazineIssue)
         : LibraryItem(itemID, title),
           issue(magazineIssue) {}
+
+    string getIssue() const
+    {
+        return issue;
+    }
 
     string getType() const override
     {
@@ -345,12 +425,17 @@ public:
     {
         return lateDays > 0 ? lateDays * 500 : 0;
     }
+
+    string serialize() const override
+    {
+        // Format: Magazine|ID|Title|Issue|isBorrowed|borrowerID
+        return "Magazine|" + escapePipe(getID()) + "|" + escapePipe(getTitle()) + "|" +
+               escapePipe(issue) + "|" + (isBorrowed() ? "1" : "0") + "|" +
+               escapePipe(getBorrowerID());
+    }
 };
 
-// =====================================================
-// MEMBER CLASS
-// =====================================================
-
+// Member Class
 class Member
 {
 private:
@@ -376,12 +461,15 @@ public:
         cout << "ID: " << id
              << " | Name: " << name << '\n';
     }
+
+    string serialize() const
+    {
+        // Format: ID|Name
+        return escapePipe(id) + "|" + escapePipe(name);
+    }
 };
 
-// =====================================================
-// LOAN CLASS
-// =====================================================
-
+// Loan Class
 class Loan
 {
 private:
@@ -403,6 +491,16 @@ public:
           returnDate("-"),
           fine(0),
           returned(false) {}
+
+    Loan(string member, string item, string borrowedOn,
+         string due, string retDate, int fee, bool isRet)
+        : memberID(member),
+          itemID(item),
+          borrowDate(borrowedOn),
+          dueDate(due),
+          returnDate(retDate),
+          fine(fee),
+          returned(isRet) {}
 
     string getMemberID() const
     {
@@ -443,12 +541,18 @@ public:
              << (returned ? "Returned" : "Active")
              << '\n';
     }
+
+    string serialize() const
+    {
+        // Format: MemberID|ItemID|BorrowDate|DueDate|ReturnDate|Fine|Returned
+        return escapePipe(memberID) + "|" + escapePipe(itemID) + "|" +
+               escapePipe(borrowDate) + "|" + escapePipe(dueDate) + "|" +
+               escapePipe(returnDate) + "|" + to_string(fine) + "|" +
+               (returned ? "1" : "0");
+    }
 };
 
-// =====================================================
-// LIBRARY CLASS
-// =====================================================
-
+// Library Class
 class Library
 {
 private:
@@ -456,10 +560,227 @@ private:
     vector<Member> members;
     vector<Loan> loans;
 
-    int nextBookNumber = 3;
-    int nextMagazineNumber = 2;
-    int nextMemberNumber = 3;
+    int nextBookNumber = 1;
+    int nextMagazineNumber = 1;
+    int nextMemberNumber = 1;
 
+    const string itemsFile = "items.txt";
+    const string membersFile = "members.txt";
+    const string loansFile = "loans.txt";
+
+    // File I/O Methods
+    void saveItems() const
+    {
+        ofstream outFile(itemsFile);
+        if (!outFile.is_open())
+            return;
+
+        for (const LibraryItem *item : items)
+        {
+            outFile << item->serialize() << "\n";
+        }
+    }
+
+    void saveMembers() const
+    {
+        ofstream outFile(membersFile);
+        if (!outFile.is_open())
+            return;
+
+        for (const Member &member : members)
+        {
+            outFile << member.serialize() << "\n";
+        }
+    }
+
+    void saveLoans() const
+    {
+        ofstream outFile(loansFile);
+        if (!outFile.is_open())
+            return;
+
+        for (const Loan &loan : loans)
+        {
+            outFile << loan.serialize() << "\n";
+        }
+    }
+
+    void loadItems()
+    {
+        ifstream inFile(itemsFile);
+        if (!inFile.is_open())
+            return;
+
+        string line;
+        while (getline(inFile, line))
+        {
+            if (line.empty())
+                continue;
+
+            vector<string> tokens = splitFormattedLine(line);
+            if (tokens.size() < 6)
+                continue;
+
+            string type = tokens[0];
+            string id = tokens[1];
+            string title = tokens[2];
+            string detail = tokens[3];
+            bool isBorrowed = (tokens[4] == "1");
+            string borrowerID = tokens[5];
+
+            LibraryItem *item = nullptr;
+            if (type == "Book")
+            {
+                item = new Book(id, title, detail);
+
+                if (id.length() >= 2 && id[0] == 'B')
+                {
+                    try
+                    {
+                        int num = stoi(id.substr(1));
+                        if (num >= nextBookNumber)
+                            nextBookNumber = num + 1;
+                    }
+                    catch (...)
+                    {
+                    }
+                }
+            }
+            else if (type == "Magazine")
+            {
+                item = new Magazine(id, title, detail);
+
+                if (id.length() >= 2 && id[0] == 'M')
+                {
+                    try
+                    {
+                        int num = stoi(id.substr(1));
+                        if (num >= nextMagazineNumber)
+                            nextMagazineNumber = num + 1;
+                    }
+                    catch (...)
+                    {
+                    }
+                }
+            }
+
+            if (item != nullptr)
+            {
+                if (isBorrowed)
+                {
+                    item->borrowItem(borrowerID);
+                }
+                items.push_back(item);
+            }
+        }
+    }
+
+    void loadMembers()
+    {
+        ifstream inFile(membersFile);
+        if (!inFile.is_open())
+            return;
+
+        string line;
+        while (getline(inFile, line))
+        {
+            if (line.empty())
+                continue;
+
+            vector<string> tokens = splitFormattedLine(line);
+            if (tokens.size() < 2)
+                continue;
+
+            string id = tokens[0];
+            string name = tokens[1];
+
+            members.emplace_back(id, name);
+
+            if (id.length() >= 4 && id.substr(0, 3) == "MBR")
+            {
+                try
+                {
+                    int num = stoi(id.substr(3));
+                    if (num >= nextMemberNumber)
+                        nextMemberNumber = num + 1;
+                }
+                catch (...)
+                {
+                }
+            }
+        }
+    }
+
+    void loadLoans()
+    {
+        ifstream inFile(loansFile);
+        if (!inFile.is_open())
+            return;
+
+        string line;
+        while (getline(inFile, line))
+        {
+            if (line.empty())
+                continue;
+
+            vector<string> tokens = splitFormattedLine(line);
+            if (tokens.size() < 7)
+                continue;
+
+            string memberID = tokens[0];
+            string itemID = tokens[1];
+            string borrowDate = tokens[2];
+            string dueDate = tokens[3];
+            string returnDate = tokens[4];
+            int fine = stoi(tokens[5]);
+            bool returned = (tokens[6] == "1");
+
+            loans.emplace_back(memberID, itemID, borrowDate, dueDate, returnDate, fine, returned);
+        }
+    }
+
+    void loadDataOrSeedDefault()
+    {
+        ifstream fItems(itemsFile);
+        ifstream fMembers(membersFile);
+        ifstream fLoans(loansFile);
+
+        bool hasItems = fItems.good();
+        bool hasMembers = fMembers.good();
+        bool hasLoans = fLoans.good();
+
+        fItems.close();
+        fMembers.close();
+        fLoans.close();
+
+        if (!hasItems || !hasMembers || !hasLoans)
+        {
+            // Sample collection
+            items.push_back(new Book("B001", "Clean Code", "Robert C. Martin"));
+            items.push_back(new Book("B002", "The Pragmatic Programmer", "Andrew Hunt"));
+            items.push_back(new Magazine("M001", "Tech Monthly", "October 2026"));
+
+            // Sample members
+            members.emplace_back("MBR001", "Nida Nur Hafizhah");
+            members.emplace_back("MBR002", "Regina Titian Pinasti");
+
+            nextBookNumber = 3;
+            nextMagazineNumber = 2;
+            nextMemberNumber = 3;
+
+            saveItems();
+            saveMembers();
+            saveLoans();
+        }
+        else
+        {
+            loadItems();
+            loadMembers();
+            loadLoans();
+        }
+    }
+
+    // Search and Helper
     LibraryItem *findItem(const string &itemID)
     {
         for (LibraryItem *item : items)
@@ -559,6 +880,7 @@ private:
         nextBookNumber++;
 
         items.push_back(new Book(id, title, author));
+        saveItems();
 
         cout << "Book added successfully. ID: "
              << id << '\n';
@@ -584,6 +906,7 @@ private:
         nextMagazineNumber++;
 
         items.push_back(new Magazine(id, title, issue));
+        saveItems();
 
         cout << "Magazine added successfully. ID: "
              << id << '\n';
@@ -608,6 +931,7 @@ private:
         nextMemberNumber++;
 
         members.emplace_back(id, name);
+        saveMembers();
 
         cout << "Member registered successfully. ID: "
              << id << '\n';
@@ -661,7 +985,6 @@ private:
             return;
         }
 
-        // IMPORTANT: Ask whether to use a simulated date.
         string today = getDateForTransaction();
         string dueDate = addDays(today, 7);
 
@@ -675,6 +998,9 @@ private:
 
         loans.emplace_back(
             memberID, itemID, today, dueDate);
+
+        saveItems();
+        saveLoans();
 
         cout << "\nBorrowing successful!\n";
         cout << "Item: " << item->getTitle() << '\n';
@@ -727,7 +1053,6 @@ private:
             return;
         }
 
-        // IMPORTANT: Ask whether to use a simulated date.
         string returnDate = getDateForTransaction();
 
         int lateDays = daysBetween(
@@ -744,6 +1069,9 @@ private:
 
         loans[loanIndex].completeReturn(returnDate, fee);
         item->returnItem();
+
+        saveItems();
+        saveLoans();
 
         cout << "\nReturn successful!\n";
         cout << "Item: " << item->getTitle() << '\n';
@@ -878,25 +1206,7 @@ private:
 public:
     Library()
     {
-        // Sample collection
-        items.push_back(
-            new Book("B001", "Clean Code", "Robert C. Martin"));
-
-        items.push_back(
-            new Book(
-                "B002",
-                "The Pragmatic Programmer",
-                "Andrew Hunt"));
-
-        items.push_back(
-            new Magazine(
-                "M001",
-                "Tech Monthly",
-                "October 2026"));
-
-        // Sample members
-        members.emplace_back("MBR001", "Nida Nur Hafizhah");
-        members.emplace_back("MBR002", "Regina Titian Pinasti");
+        loadDataOrSeedDefault();
     }
 
     ~Library()
@@ -955,10 +1265,7 @@ public:
     }
 };
 
-// =====================================================
-// MAIN FUNCTION
-// =====================================================
-
+// Main Function
 int main()
 {
     Library shelfMate;

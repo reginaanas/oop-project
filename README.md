@@ -79,20 +79,20 @@ Download the project files and open the project folder in your terminal.
 ### 2. Compile the Program
 Run the following command:
 ```bash
-g++ -std=c++11 project.cpp -o project
+g++ -std=c++11 project.cpp -o ShelfMate
 ```
 
 ### 3. Run ShelfMate
 **Windows:**
 
 ```bash
-.\project.exe
+.\ShelfMate.exe
 ```
 
 **Linux or macOS:**
 
 ```bash
-./project
+./ShelfMate
 ```
 
 ## 🔑 Sample Login Accounts

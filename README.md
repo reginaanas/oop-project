@@ -1,6 +1,6 @@
 # 📚 ShelfMate: Library Management System
 
-Welcome to ShelfMate! 👋
+Welcome to **ShelfMate**! 👋
 
 ShelfMate is a terminal-based Library Management System built with C++11 to demonstrate the four pillars of Object-Oriented Programming (OOP), along with permanent file-based storage.
 The application allows administrators to manage library items and members, while members can borrow and return books or magazines. It automatically calculates late return fees and persists all data across program runs. 💻

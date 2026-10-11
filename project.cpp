@@ -756,9 +756,9 @@ private:
         if (!hasItems || !hasMembers || !hasLoans)
         {
             // Sample collection
-            items.push_back(new Book("B001", "Clean Code", "Robert C. Martin"));
-            items.push_back(new Book("B002", "The Pragmatic Programmer", "Andrew Hunt"));
-            items.push_back(new Magazine("M001", "Tech Monthly", "October 2026"));
+            items.push_back(new Book("B001", "Laskar Pelangi", "Andrea Hirata"));
+            items.push_back(new Book("B002", "The Object-Oriented Thought Process", "Matt Weisfeld"));
+            items.push_back(new Magazine("M001", "Bobo", "Edisi Oktober 2026"));
 
             // Sample members
             members.emplace_back("MBR001", "Nida Nur Hafizhah");

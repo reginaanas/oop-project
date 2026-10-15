@@ -1,7 +1,3 @@
-Book|B001|Clean Code|Robert C. Martin|0|
-Book|B002|The Pragmatic Programmer|Andrew Hunt|0|
-Book|B003|Introduction to Algorithms|Thomas H. Cormen|0|
-Book|B004|Design Patterns|Erich Gamma|0|
-Magazine|M001|Tech Monthly|October 2026|0|
-Magazine|M002|National Geographic|Vol. 142 No. 5|1|MBR001
-Magazine|M003|IEEE Software|September 2026|0|
+Book|B001|Laskar Pelangi|Andrea Hirata|0|
+Book|B002|The Object-Oriented Thought Process|Matt Weisfeld|0|
+Magazine|M001|Bobo|Edisi Oktober 2026|0|
